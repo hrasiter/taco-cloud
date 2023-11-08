@@ -1,5 +1,7 @@
 package com.github.hrer.entity;
 
+import java.sql.Date;
+
 import org.hibernate.validator.constraints.CreditCardNumber;
 
 import jakarta.validation.constraints.Digits;
@@ -10,6 +12,8 @@ import lombok.Data;
 @Data
 public class Order {
 	
+	public long id;
+	public Date placedAt;
 	@NotBlank(message="Name is required")
 	private String name;
 	
