@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.SessionAttributes;
 
 import com.github.hrer.entity.Ingredient;
 import com.github.hrer.entity.Taco;
@@ -19,19 +20,36 @@ import com.github.hrer.entity.Taco;
 import jakarta.validation.Valid;
 
 import com.github.hrer.entity.Ingredient.Type;
+import com.github.hrer.entity.Order;
 import com.github.hrer.repository.IngredientRepository;
+import com.github.hrer.repository.TacoRepository;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Controller
 @RequestMapping("/design")
+@SessionAttributes("order")
 public class DesignTacoController {
 
 	private final IngredientRepository ingredientRepo;
 	
+	private TacoRepository tacoRepo;
+	
 	@Autowired
-	public DesignTacoController(IngredientRepository ingredientRepo) {
+	public DesignTacoController(IngredientRepository ingredientRepo, TacoRepository tacoRepo) {
 	this.ingredientRepo = ingredientRepo;
+	this.tacoRepo = tacoRepo;
+	}
+	
+	@ModelAttribute(name = "order")
+	public Order order() {
+	return new Order();
+	}
+	
+	@ModelAttribute(name = "taco")
+	public Taco taco() {
+		return new Taco();
 	}
 	
 	@GetMapping
@@ -46,19 +64,7 @@ public class DesignTacoController {
 	private void addIngrediensToModel(Model model) {
 		List<Ingredient> ingredients = new ArrayList<>();
 		ingredientRepo.findAll().forEach(i -> ingredients.add(i));
-//		.asList(
-//				new Ingredient("FLTO", "Flour Tortilla", Type.WRAP),
-//				new Ingredient("COTO", "Corn Tortilla", Type.WRAP),
-//				new Ingredient("GRBF", "Ground Beef", Type.PROTEIN),
-//				new Ingredient("CARN", "Carnitas", Type.PROTEIN),
-//				new Ingredient("TMTO", "Diced Tomatoes", Type.VEGGIES),
-//				new Ingredient("LETC", "Lettuce", Type.VEGGIES),
-//				new Ingredient("CHED", "Cheddar", Type.CHEESE),
-//				new Ingredient("JACK", "Monterrey Jack", Type.CHEESE),
-//				new Ingredient("SLSA", "Salsa", Type.SAUCE),
-//				new Ingredient("SRCR", "Sour Cream", Type.SAUCE)
-//				);
-		
+
 		Type types [] = Ingredient.Type.values();
 		
 		for (Type type: types) {
@@ -68,7 +74,8 @@ public class DesignTacoController {
 	}
 	
 	@PostMapping
-	public String processDesign(@Valid @ModelAttribute("design") Taco design, BindingResult binding) {
+	public String processDesign(@Valid @ModelAttribute("design") Taco design, BindingResult binding,
+			@ModelAttribute Order order) {
 		
 		if(binding.hasErrors()) {
 			log.info("Form has errors:" + binding.toString());
@@ -76,6 +83,9 @@ public class DesignTacoController {
 		}
 		
 		log.info("Processing design" + design);
+		
+		Taco saved = tacoRepo.save(design);
+		order.addDesign(saved);
 		
 		return "redirect:/orders/current";
 	}
