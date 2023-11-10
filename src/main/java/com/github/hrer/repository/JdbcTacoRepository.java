@@ -49,7 +49,7 @@ public class JdbcTacoRepository implements TacoRepository {
 		PreparedStatementCreator psc = factory.newPreparedStatementCreator(
 								Arrays.asList(taco.getName(), new Timestamp(taco.getCreatedAt().getTime())));
 		KeyHolder keyHolder = new GeneratedKeyHolder();
-		int a = jdbc.update(psc, keyHolder);
+		jdbc.update(psc, keyHolder);
 		return keyHolder.getKey().longValue();
 	}
 
